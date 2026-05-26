@@ -4,14 +4,24 @@ using Amazon.S3;
 using CalendarNotesApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 AWSOptions awsOptions = builder.Configuration.GetAWSOptions();
 builder.Services.AddAWSService<IAmazonS3>(awsOptions);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: myAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:3000") // Add your Frontend URLs here (React, Vite, Angular, etc.)
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))); // Update to use your target engine driver string
-
 
 var app = builder.Build();
 
@@ -25,6 +35,7 @@ using (var scope = app.Services.CreateScope())
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseCors(myAllowSpecificOrigins);
 app.MapControllers();
 
 app.Run();
