@@ -54,6 +54,37 @@ public class NotesController : ControllerBase
         return Ok(note);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, [FromForm] string content, [FromForm] string noteDate, IFormFile? image)
+    {
+        var note = await _context.Notes.FindAsync(id);
+        if (note == null) return NotFound();
+
+        note.Content = content;
+        note.NoteDate = noteDate;
+
+        if (image != null)
+        {
+            string bucketName = _config["AWS:BucketName"] ?? "default-bucket-name";
+            var fileKey = $"{Guid.NewGuid()}_{image.FileName}";
+            using var stream = image.OpenReadStream();
+
+            var uploadRequest = new TransferUtilityUploadRequest
+            {
+                InputStream = stream,
+                Key = fileKey,
+                BucketName = bucketName
+            };
+
+            var transferUtility = new TransferUtility(_s3Client);
+            await transferUtility.UploadAsync(uploadRequest);
+            note.ImageUrl = $"https://{bucketName}.s3.amazonaws.com/{fileKey}";
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(note);
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
