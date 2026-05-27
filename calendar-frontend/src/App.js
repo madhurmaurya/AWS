@@ -8,7 +8,7 @@ import axios from 'axios';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const localizer = momentLocalizer(moment);
-const API_BASE = 'http://localhost:5213/api/notes';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5213/api/notes';
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);

@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: myAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000") // Add your Frontend URLs here (React, Vite, Angular, etc.)
+                          policy.WithOrigins("http://localhost:3000", "http://Calendar-notes-env-env.eba-m3gxgt77.ap-south-1.elasticbeanstalk.com") // Add your Frontend URLs here (React, Vite, Angular, etc.)
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
