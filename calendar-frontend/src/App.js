@@ -95,7 +95,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <header className="flex justify-between items-center p-6 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-indigo-500 to-blue-600 bg-clip-text text-transparent">
-          CloudNotes Calendar
+          My Cloud Calendar
         </h1>
         <button 
           onClick={() => setDarkMode(!darkMode)}
