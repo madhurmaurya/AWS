@@ -1,4 +1,4 @@
-# My Cloud Calendar — AWS Deployment Guide
+# My Notes Calendar — AWS Deployment Guide
 
 This guide walks through the full AWS assignment for the **Calendar Notes** application: a React calendar frontend, ASP.NET Core API, PostgreSQL database, S3 image storage, and the required AWS infrastructure (VPC, RDS, Elastic Beanstalk, S3 → SQS → Lambda, CloudWatch).
 

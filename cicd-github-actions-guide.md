@@ -1,4 +1,4 @@
-# CI/CD Setup with GitHub Actions — My Cloud Calendar
+# CI/CD Setup with GitHub Actions — My Notes Calendar
 
 This guide sets up automatic deployment so that every time you push code to GitHub, your app is **automatically built and deployed** to AWS — no manual steps needed.
 
