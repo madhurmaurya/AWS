@@ -119,7 +119,7 @@ Create a file at `.github/workflows/deploy.yml` with the following content:
 
 ```yaml
 # ============================================================
-# CI/CD Pipeline — CloudNotes Calendar
+# CI/CD Pipeline — My Notes Calendar
 # Runs automatically when you push to the master branch
 # ============================================================
 

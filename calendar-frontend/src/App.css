@@ -1,38 +1,74 @@
-.App {
-  text-align: center;
+.rbc-calendar {
+  border-radius: 24px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.rbc-toolbar {
+  display: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.rbc-header {
+  padding: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.rbc-month-view,
+.rbc-time-view {
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
 }
 
-.App-link {
-  color: #61dafb;
+.rbc-date-cell {
+  padding: 8px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.rbc-day-bg:hover {
+  background: rgba(99, 102, 241, 0.06);
+  transition: 0.2s ease;
+}
+
+.rbc-today {
+  background: rgba(99, 102, 241, 0.08) !important;
+}
+
+.rbc-off-range-bg {
+  background: #f8fafc;
+}
+
+.dark .rbc-month-view,
+.dark .rbc-time-view,
+.dark .rbc-header {
+  border-color: #334155;
+}
+
+.dark .rbc-header {
+  background: #0f172a;
+}
+
+.dark .rbc-off-range-bg {
+  background: #0f172a;
+}
+
+.dark .rbc-day-bg {
+  background: #020617;
+}
+
+.dark .rbc-today {
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+.dark .rbc-time-content,
+.dark .rbc-time-header-content,
+.dark .rbc-time-view,
+.dark .rbc-month-row,
+.dark .rbc-day-slot,
+.dark .rbc-header,
+.dark .rbc-timeslot-group {
+  border-color: #334155 !important;
+}
+
+.modern-calendar {
+  font-family: Inter, sans-serif;
 }
