@@ -1,0 +1,149 @@
+# ============================================================
+# CI/CD Pipeline — CloudNotes Calendar
+# Runs automatically when you push to the master branch
+# ============================================================
+
+name: Deploy to AWS
+
+# TRIGGER: This workflow runs whenever you push to 'master'
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  # ──────────────────────────────────────────
+  # JOB 1: Build and Deploy the .NET API
+  #         to Elastic Beanstalk
+  # ──────────────────────────────────────────
+  deploy-api:
+    name: Deploy API to Elastic Beanstalk
+    runs-on: ubuntu-latest   # GitHub runs this on a fresh Linux VM
+
+    steps:
+
+      # Step 1: Check out your code onto the GitHub VM
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install .NET SDK so we can build the C# project
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'  
+
+      # Step 3: Build and publish the API (same as running dotnet publish locally)
+      - name: Publish .NET API
+        run: |
+          cd CalendarNotesApi
+          dotnet publish -c Release -o ./publish
+
+      # Step 4: Zip the published output (same as Compress-Archive on Windows)
+      - name: Zip the publish output
+        run: |
+          cd CalendarNotesApi/publish
+          zip -r ../deploy.zip .
+
+      # Step 5: Configure AWS credentials using the secrets you added
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 6: Upload the zip file to S3 (EB needs a zip in S3 to deploy)
+      - name: Upload zip to S3 (for Elastic Beanstalk)
+        run: |
+          # Create a unique version label using the git commit hash
+          VERSION_LABEL="api-${{ github.sha }}"
+          
+          # Upload zip to a deployment bucket
+          # Note: EB creates its own S3 bucket automatically — we use it here
+          EB_BUCKET="elasticbeanstalk-${{ secrets.AWS_REGION }}-$(aws sts get-caller-identity --query Account --output text)"
+          
+          aws s3 cp CalendarNotesApi/deploy.zip "s3://${EB_BUCKET}/${VERSION_LABEL}.zip"
+          
+          # Save for next steps
+          echo "VERSION_LABEL=${VERSION_LABEL}" >> $GITHUB_ENV
+          echo "EB_BUCKET=${EB_BUCKET}" >> $GITHUB_ENV
+
+      # Step 7: Create a new application version in Elastic Beanstalk
+      - name: Create EB application version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --version-label "${{ env.VERSION_LABEL }}" \
+            --source-bundle S3Bucket="${{ env.EB_BUCKET }}",S3Key="${{ env.VERSION_LABEL }}.zip" \
+            --region "${{ secrets.AWS_REGION }}"
+
+      # Step 8: Deploy the new version to your EB environment
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          aws elasticbeanstalk update-environment \
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --environment-name "${{ secrets.EB_ENV_NAME }}" \
+            --version-label "${{ env.VERSION_LABEL }}" \
+            --region "${{ secrets.AWS_REGION }}"
+
+      # Step 9: Wait for the deployment to finish and confirm it's healthy
+      - name: Wait for EB deployment to complete
+        run: |
+          echo "Waiting for Elastic Beanstalk to finish deploying..."
+          aws elasticbeanstalk wait environment-updated \
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --environment-names "${{ secrets.EB_ENV_NAME }}" \
+            --region "${{ secrets.AWS_REGION }}"
+          echo "✅ API deployment complete!"
+
+  # ──────────────────────────────────────────
+  # JOB 2: Build and Deploy the React Frontend
+  #         to S3 Static Bucket
+  # This job runs AFTER the API job succeeds
+  # ──────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy React Frontend to S3
+    runs-on: ubuntu-latest
+    needs: deploy-api   # Only runs if the API job succeeded
+
+    steps:
+
+      # Step 1: Check out your code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Node.js so we can run npm
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step 3: Install npm packages (same as running npm install locally)
+      - name: Install dependencies
+        run: |
+          cd calendar-frontend
+          npm install
+
+      # Step 4: Build the React app with the live EB API URL
+      #         REACT_APP_API_URL is baked into the build at this point
+      - name: Build React app
+        run: |
+          cd calendar-frontend
+          REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }} npm run build
+
+      # Step 5: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 6: Sync the build folder to your S3 static bucket
+      #         --delete removes old files that no longer exist
+      - name: Deploy to S3
+        run: |
+          aws s3 sync calendar-frontend/build/ s3://${{ secrets.S3_STATIC_BUCKET }} --delete
+          echo "✅ Frontend deployment complete!"
+          echo "🌐 Website: http://${{ secrets.S3_STATIC_BUCKET }}.s3-website-${{ secrets.AWS_REGION }}.amazonaws.com"
