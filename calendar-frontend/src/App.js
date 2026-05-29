@@ -349,7 +349,7 @@ export default function App() {
               selectable
               popup
               step={30}
-              longPressThreshold={10}
+              longPressThreshold={350}
               showMultiDayTimes
               date={currentDate}
               view={currentView}
