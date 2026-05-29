@@ -101,6 +101,8 @@ export default function App() {
 
   const [noteText, setNoteText] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('10:00');
 
   useEffect(() => {
     if (darkMode) {
@@ -118,13 +120,28 @@ export default function App() {
     try {
       const res = await axios.get(API_BASE);
 
-      const formattedEvents = res.data.map((note) => ({
-        id: note.id,
-        title: note.content,
-        start: new Date(note.noteDate),
-        end: new Date(note.noteDate),
-        imageUrl: note.imageUrl,
-      }));
+      const formattedEvents = res.data.map((note) => {
+        const baseDate = note.noteDate.slice(0, 10); // "YYYY-MM-DD"
+
+        // If startTime exists (e.g. "14:00:00"), combine with date
+        const start = note.startTime
+          ? new Date(`${baseDate}T${note.startTime}`)
+          : new Date(`${baseDate}T09:00:00`);
+
+        const end = note.endTime
+          ? new Date(`${baseDate}T${note.endTime}`)
+          : new Date(start.getTime() + 60 * 60 * 1000); // default: 1 hour duration
+
+        return {
+          id: note.id,
+          title: note.content,
+          start,
+          end,
+          imageUrl: note.imageUrl,
+          startTime: note.startTime,
+          endTime: note.endTime,
+        };
+      });
 
       setNotes(formattedEvents);
     } catch (err) {
@@ -137,6 +154,8 @@ export default function App() {
     setSelectedEvent(null);
     setNoteText('');
     setSelectedFile(null);
+    setStartTime('09:00');
+    setEndTime('10:00');
     setIsModalOpen(true);
   };
 
@@ -145,6 +164,9 @@ export default function App() {
     setSelectedSlot(event.start);
     setNoteText(event.title);
     setSelectedFile(null);
+    // Pre-fill times from existing event
+    setStartTime(event.startTime ? event.startTime.slice(0, 5) : moment(event.start).format('HH:mm'));
+    setEndTime(event.endTime ? event.endTime.slice(0, 5) : moment(event.end).format('HH:mm'));
     setIsModalOpen(true);
   };
 
@@ -153,10 +175,11 @@ export default function App() {
     const formattedDate = moment(selectedSlot).format('YYYY-MM-DD');
     formData.append('content', noteText);
     formData.append('noteDate', formattedDate);
+    formData.append('startTime', startTime);
+    formData.append('endTime', endTime);
     if (selectedFile) {
       formData.append('image', selectedFile);
     }
-
     try {
       if (selectedEvent) {
         await axios.put(`${API_BASE}/${selectedEvent.id}`, formData);
@@ -285,6 +308,27 @@ export default function App() {
             <p className="text-sm text-slate-500 mb-5">
               {moment(selectedSlot).format('dddd, MMMM Do YYYY')}
             </p>
+
+            <div className="flex gap-4 mb-5">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-slate-500 mb-1">Start time</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-transparent p-3 outline-none focus:ring-2 ring-indigo-500"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-slate-500 mb-1">End time</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-transparent p-3 outline-none focus:ring-2 ring-indigo-500"
+                />
+              </div>
+            </div>
 
             <textarea
               className="w-full h-36 rounded-2xl border border-slate-300 dark:border-slate-700 bg-transparent p-4 outline-none focus:ring-2 ring-indigo-500 resize-none"

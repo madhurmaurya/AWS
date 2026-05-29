@@ -48,7 +48,17 @@ public class NotesController : ControllerBase
             imageUrl = $"https://{bucketName}.s3.amazonaws.com/{fileKey}";
         }
 
-        var note = new Note { Id = Guid.NewGuid(), Content = content, NoteDate = noteDate, ImageUrl = imageUrl };
+        TimeSpan? startTime = null;
+        TimeSpan? endTime = null;
+
+        if (Request.Form.TryGetValue("startTime", out var startStr) && TimeSpan.TryParse(startStr, out var parsedStart))
+            startTime = parsedStart;
+
+        if (Request.Form.TryGetValue("endTime", out var endStr) && TimeSpan.TryParse(endStr, out var parsedEnd))
+            endTime = parsedEnd;
+
+        var note = new Note { Id = Guid.NewGuid(), Content = content, NoteDate = noteDate, ImageUrl = imageUrl, StartTime = startTime, EndTime = endTime };
+        
         _context.Notes.Add(note);
         await _context.SaveChangesAsync();
         return Ok(note);
@@ -62,6 +72,12 @@ public class NotesController : ControllerBase
 
         note.Content = content;
         note.NoteDate = noteDate;
+
+        if (Request.Form.TryGetValue("startTime", out var startStr) && TimeSpan.TryParse(startStr, out var parsedStart))
+            note.StartTime = parsedStart;
+
+        if (Request.Form.TryGetValue("endTime", out var endStr) && TimeSpan.TryParse(endStr, out var parsedEnd))
+            note.EndTime = parsedEnd;
 
         if (image != null)
         {

@@ -11,4 +11,7 @@ public class Note
     [Required]
     public string Content { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
+    
+    public TimeSpan? StartTime { get; set; }
+    public TimeSpan? EndTime { get; set; }
 }
