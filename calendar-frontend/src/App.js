@@ -23,6 +23,25 @@ import './App.css';
 const localizer = momentLocalizer(moment);
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5213/api/notes';
 
+const EVENT_COLORS = [
+  { bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)', shadow: 'rgba(99,102,241,0.4)'  },
+  { bg: 'linear-gradient(135deg,#f43f5e,#fb7185)', shadow: 'rgba(244,63,94,0.4)'   },
+  { bg: 'linear-gradient(135deg,#0ea5e9,#38bdf8)', shadow: 'rgba(14,165,233,0.4)'  },
+  { bg: 'linear-gradient(135deg,#10b981,#34d399)', shadow: 'rgba(16,185,129,0.4)'  },
+  { bg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', shadow: 'rgba(245,158,11,0.4)'  },
+  { bg: 'linear-gradient(135deg,#ec4899,#f472b6)', shadow: 'rgba(236,72,153,0.4)'  },
+  { bg: 'linear-gradient(135deg,#14b8a6,#2dd4bf)', shadow: 'rgba(20,184,166,0.4)'  },
+  { bg: 'linear-gradient(135deg,#8b5cf6,#a78bfa)', shadow: 'rgba(139,92,246,0.4)'  },
+];
+
+// Assigns a consistent color to each note based on its id
+function getEventColor(id) {
+  if (!id) return EVENT_COLORS[0];
+  // Sum char codes of id string to get a stable index
+  const idx = id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % EVENT_COLORS.length;
+  return EVENT_COLORS[idx];
+}
+
 function CustomToolbar(toolbar) {
   const goToBack = () => {
     toolbar.onNavigate('PREV');
@@ -149,13 +168,17 @@ export default function App() {
     }
   };
 
-  const handleSelectSlot = ({ start }) => {
+  const handleSelectSlot = ({ start, end }) => {
     setSelectedSlot(start);
     setSelectedEvent(null);
     setNoteText('');
     setSelectedFile(null);
-    setStartTime('09:00');
-    setEndTime('10:00');
+    const isSameTime = start.getTime() === end.getTime();
+    setStartTime(moment(start).format('HH:mm'));
+    setEndTime(isSameTime
+      ? moment(start).add(1, 'hour').format('HH:mm')
+      : moment(end).format('HH:mm')
+    );
     setIsModalOpen(true);
   };
 
@@ -274,17 +297,20 @@ export default function App() {
                   />
                 ),
               }}
-              eventPropGetter={() => ({
-                style: {
-                  background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '4px 8px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
-                },
-              })}
+              eventPropGetter={(event) => {
+                const color = getEventColor(event.id);
+                return {
+                  style: {
+                    background: color.bg,
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '4px 8px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    boxShadow: `0 4px 12px ${color.shadow}`,
+                  },
+                };
+              }}
               className="modern-calendar"
             />
           </div>
