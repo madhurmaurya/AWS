@@ -23,6 +23,23 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))); // Update to use your target engine driver string
 
+var secretArn = builder.Configuration["AWS:SecretsManagerArn"];
+if (!string.IsNullOrEmpty(secretArn))
+{
+    // Fetch from Secrets Manager at startup
+    var smClient = new Amazon.SecretsManager.AmazonSecretsManagerClient();
+    var response = await smClient.GetSecretValueAsync(new Amazon.SecretsManager.Model.GetSecretValueRequest
+    {
+        SecretId = secretArn
+    });
+    var secret = System.Text.Json.JsonDocument.Parse(response.SecretString);
+    var host = secret.RootElement.GetProperty("host").GetString();
+    var username = secret.RootElement.GetProperty("username").GetString();
+    var password = secret.RootElement.GetProperty("password").GetString();
+    var connStr = $"Host={host};Port=5432;Database=calendardb;Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = connStr;
+}
+
 var app = builder.Build();
 
 // Automatically handle and execute database context migration tables tracking on execution runtime setup
