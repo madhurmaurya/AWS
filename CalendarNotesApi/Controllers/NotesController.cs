@@ -79,9 +79,25 @@ public class NotesController : ControllerBase
         if (Request.Form.TryGetValue("endTime", out var endStr) && TimeSpan.TryParse(endStr, out var parsedEnd))
             note.EndTime = parsedEnd;
 
-        if (image != null)
+       if (image != null)
         {
             string bucketName = _config["AWS:BucketName"] ?? "default-bucket-name";
+
+            // Delete old image from S3 if one exists
+            if (!string.IsNullOrEmpty(note.ImageUrl))
+            {
+                var oldKey = note.ImageUrl.Replace($"https://{bucketName}.s3.amazonaws.com/", "");
+                try
+                {
+                    await _s3Client.DeleteObjectAsync(bucketName, oldKey);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"S3 delete old image failed for key {oldKey}: {ex.Message}");
+                }
+            }
+
+            // Upload new image
             var fileKey = $"{Guid.NewGuid()}_{image.FileName}";
             using var stream = image.OpenReadStream();
 
@@ -106,6 +122,25 @@ public class NotesController : ControllerBase
     {
         var note = await _context.Notes.FindAsync(id);
         if (note == null) return NotFound();
+
+        // Delete image from S3 if it exists
+        if (!string.IsNullOrEmpty(note.ImageUrl))
+        {
+            string bucketName = _config["AWS:BucketName"] ?? "default-bucket-name";
+            // Extract the file key from the URL
+            // URL format: https://bucketname.s3.amazonaws.com/filekey
+            var fileKey = note.ImageUrl.Replace($"https://{bucketName}.s3.amazonaws.com/", "");
+            try
+            {
+                await _s3Client.DeleteObjectAsync(bucketName, fileKey);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail — still delete the DB record
+                Console.WriteLine($"S3 delete failed for key {fileKey}: {ex.Message}");
+            }
+        }
+
         _context.Notes.Remove(note);
         await _context.SaveChangesAsync();
         return Ok();
