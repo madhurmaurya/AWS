@@ -55,4 +55,7 @@ app.UseRouting();
 app.UseCors(myAllowSpecificOrigins);
 app.MapControllers();
 
+// Root health check endpoint
+app.MapGet("/", () => Results.Ok(new { status = "Healthy" }));
+
 app.Run();
