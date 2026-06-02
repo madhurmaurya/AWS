@@ -28,8 +28,8 @@ const localizer = momentLocalizer(moment);
 
 const API_BASE =
   process.env.REACT_APP_API_URL ||
-  'http://localhost:5213/api/notes';
-
+    'http://localhost:5213/api/notes';
+    
 const EVENT_COLORS = [
   {
     bg: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
@@ -54,6 +54,10 @@ const EVENT_COLORS = [
   {
     bg: 'linear-gradient(135deg,#ec4899,#f472b6)',
     shadow: 'rgba(236,72,153,0.4)',
+  },
+    {
+    bg: 'linear-gradient(135deg,#ec4899,#f472b6)',
+    shadow: 'rgba(19, 223, 87, 0.68)',
   },
 ];
 
@@ -107,8 +111,8 @@ function CustomToolbar(toolbar) {
             key={view}
             onClick={() => toolbar.onView(view)}
             className={`px-4 py-2 rounded-xl capitalize transition ${toolbar.view === view
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'hover:bg-white dark:hover:bg-slate-700'
+              ? 'bg-indigo-600 text-white shadow-lg'
+              : 'hover:bg-white dark:hover:bg-slate-700'
               }`}
           >
             {view}
