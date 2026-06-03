@@ -55,10 +55,6 @@ const EVENT_COLORS = [
     bg: 'linear-gradient(135deg,#ec4899,#f472b6)',
     shadow: 'rgba(236,72,153,0.4)',
   },
-    {
-    bg: 'linear-gradient(135deg,#ec4899,#f472b6)',
-    shadow: 'rgba(19, 223, 87, 0.68)',
-  },
 ];
 
 function getEventColor(id) {
