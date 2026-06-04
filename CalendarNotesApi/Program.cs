@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: myAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000", "http://static-bucket-for-calendar.s3-website.ap-south-1.amazonaws.com") // Add your Frontend URLs here (React, Vite, Angular, etc.)
+                          policy.WithOrigins("http://localhost:3000", "https://mycalendarnotes.netlify.app/", "http://static-bucket-for-calendar.s3-website.ap-south-1.amazonaws.com") // Add your Frontend URLs here (React, Vite, Angular, etc.)
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
